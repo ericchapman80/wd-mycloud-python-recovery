@@ -8,6 +8,14 @@ Recover and transfer files from a Western Digital (WD) MyCloud device using Pyth
 
 ---
 
+## ☕ Support This Project
+
+If this tool saved your data, consider supporting continued development:
+
+- **GitHub Sponsors:** [Sponsor @ericchapman80](https://github.com/sponsors/ericchapman80)
+
+---
+
 ## 🚨 Migration Notice
 
 **Recommended:** Switch to the modern rsync-based tool for:
@@ -50,9 +58,46 @@ python sync_mtime.py --db index.db --filedir /source --dumpdir /dest
 
 - Multi-threaded file recovery via WD MyCloud REST SDK
 - Memory-optimized mode (`--low-memory`)
-- Resume capability
+- Resume capability with path-based matching
 - Symlink-based deduplication
 - Metadata validation tools
+- Preflight system analysis with thread recommendations
+
+## Key CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--resume` | Resume a previous run (regenerates log from destination) |
+| `--low-memory` | Reduce RAM usage ~40% (disables mtime preservation) |
+| `--thread-count N` | Number of threads (default: CPU count) |
+| `--preserve-mtime` | Set destination mtime from DB timestamps (default: on) |
+| `--sanitize-pipes` | Replace `\|` with `-` for Windows/NTFS/SMB targets |
+| `--io-buffer-size N` | Buffer size for manual buffered copies (default: 0) |
+| `--io-max-concurrency N` | Limit concurrent disk I/O (default: 0 = no cap) |
+| `--preflight` | Run system analysis before copying |
+
+## Low-Memory Mode
+
+For systems with limited RAM (< 16GB) or very large file databases (500K+ files):
+
+```bash
+python restsdk_public.py \
+    --db=/path/to/index.db \
+    --filedir=/path/to/source \
+    --dumpdir=/path/to/dest \
+    --log_file=copied_file.log \
+    --low-memory \
+    --thread-count=2 \
+    --resume
+```
+
+**Memory comparison (500K files):**
+
+| Mode | RAM Usage | Preserve mtime |
+|------|-----------|----------------|
+| Normal | ~11GB | ✅ Yes |
+| `--low-memory` | ~6-7GB | ❌ No |
+| `--low-memory --thread-count=2` | ~5-6GB | ❌ No |
 
 ## Tools
 
@@ -94,10 +139,61 @@ This Python tool remains available for:
 - **Critical Bugs:** Open issues in this repository
 - **Questions:** See modern tool documentation
 
+## Running Over SSH
+
+For long-running recoveries over SSH, use `tmux` or `screen`:
+
+```bash
+# Start a detachable session
+tmux new -s recovery
+
+# Run recovery inside the session
+source venv/bin/activate
+python restsdk_public.py --resume --db index.db --filedir /source --dumpdir /dest --log_file copied_file.log
+
+# Detach: Ctrl+B then D
+# Reattach later: tmux attach -t recovery
+```
+
+## Monitoring
+
+While the script runs, monitor progress in another terminal:
+
+```bash
+# Follow the log
+tail -f summary_*.log
+
+# Check copied files count
+sqlite3 /path/to/index.db "SELECT COUNT(*) FROM copied_files"
+
+# Check skipped files
+sqlite3 /path/to/index.db "SELECT COUNT(*) FROM skipped_files"
+
+# Run the monitor script
+nohup ./monitor.sh /path/to/monitor.log 30 > /dev/null 2>&1 &
+```
+
+## FAQ
+
+**Why do I see "File not found in database" errors?**
+
+Files may be missing from the database due to corruption or interrupted operations on the MyCloud device. These are skipped and reported.
+
+**How is the database structured?**
+
+- Main table: `Files`
+- `contentID`: On-disk filename (e.g., `a22236cwsmelmd4on2qs2jdf`)
+- `name`: Original human-readable filename
+- `parentID`: Reference to parent directory for path reconstruction
+- Files stored in sharded directories: `/files/a/a22236...`, `/files/b/b12345...`
+
+**When to use `--sanitize-pipes`?**
+
+Needed for destinations that disallow `|` in filenames (Windows NTFS/FAT and many SMB shares). Leave off for Linux/macOS/EXT4/APFS.
+
 ## Documentation
 
-- **Database Schema:** [sql-data.info](sql-data.info)
-- **Modern Tool:** [wd-mycloud-rsync-recovery](https://github.com/ericchapman80/wd-mycloud-rsync-recovery)
+- **Modern Tool (Recommended):** [wd-mycloud-rsync-recovery](https://github.com/ericchapman80/wd-mycloud-rsync-recovery)
 
 ## License
 

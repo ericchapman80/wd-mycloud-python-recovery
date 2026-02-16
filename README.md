@@ -6,6 +6,10 @@ Recover and transfer files from a Western Digital (WD) MyCloud device using Pyth
 
 > **📢 This is the legacy Python-based recovery tool.** It remains available for existing users but is no longer actively developed. Critical bug fixes only.
 
+> **⚠️ Platform Support:** macOS and Linux only. **Windows is not supported.**
+
+> **⚠️ Disclaimer:** This software is provided "as is" without warranty of any kind. The authors are not responsible for any data loss, corruption, or other issues that may occur. **Always maintain backups of your original data before attempting recovery.** Use at your own risk.
+
 ---
 
 ## ☕ Support This Project

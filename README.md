@@ -17,6 +17,7 @@ Recover and transfer files from a Western Digital (WD) MyCloud device using Pyth
 If this tool saved your data, consider supporting continued development:
 
 - **GitHub Sponsors:** [Sponsor @ericchapman80](https://github.com/sponsors/ericchapman80)
+- **Buy Me a Coffee:** [buymeacoffee.com/ericchapman80](https://buymeacoffee.com/ericchapman80)
 
 ---
 
